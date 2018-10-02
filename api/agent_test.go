@@ -53,6 +53,26 @@ func TestAPI_AgentMetrics(t *testing.T) {
 	})
 }
 
+func TestAPI_AgentHost(t *testing.T) {
+	t.Parallel()
+	c, s := makeClient(t)
+	defer s.Stop()
+
+	agent := c.Agent()
+	timer := &retry.Timer{Timeout: 10 * time.Second, Wait: 500 * time.Millisecond}
+	retry.RunWith(timer, t, func(r *retry.R) {
+		host, err := agent.Host()
+		if err != nil {
+			r.Fatalf("err: %v", err)
+		}
+
+		// CollectionTime should exist on all responses
+		if host["CollectionTime"] == nil {
+			r.Fatalf("missing host response")
+		}
+	})
+}
+
 func TestAPI_AgentReload(t *testing.T) {
 	t.Parallel()
 
@@ -1156,9 +1176,9 @@ func TestAPI_AgentConnectProxyConfig(t *testing.T) {
 		ExecMode:          "daemon",
 		Command:           []string{"consul", "connect", "proxy"},
 		Config: map[string]interface{}{
-			"bind_address": "127.0.0.1",
-			"bind_port":    float64(20000),
-			"foo":          "bar",
+			"bind_address":          "127.0.0.1",
+			"bind_port":             float64(20000),
+			"foo":                   "bar",
 			"local_service_address": "127.0.0.1:8000",
 		},
 	}
