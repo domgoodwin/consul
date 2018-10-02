@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/consul/agent/checks"
 	"github.com/hashicorp/consul/agent/config"
 	"github.com/hashicorp/consul/agent/connect"
+	"github.com/hashicorp/consul/agent/debug"
 	"github.com/hashicorp/consul/agent/structs"
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/lib"
@@ -3385,7 +3386,7 @@ func TestAgentConnectProxyConfig_ConfigHandling(t *testing.T) {
 			TTL: 15 * time.Second,
 		},
 		Connect: &structs.ServiceConnect{
-		// Proxy is populated with the definition in the table below.
+			// Proxy is populated with the definition in the table below.
 		},
 	}
 
@@ -4167,4 +4168,32 @@ func testAllowProxyConfig() string {
 			}
 		}
 	`
+}
+
+func TestAgent_Host(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	dc1 := "dc1"
+	a := NewTestAgent(t.Name(), `
+	acl_datacenter = "`+dc1+`"
+	acl_default_policy = "allow"
+	acl_master_token = "root"
+	acl_agent_token = "root"
+	acl_agent_master_token = "towel"
+	acl_enforce_version_8 = true
+`)
+	defer a.Shutdown()
+
+	testrpc.WaitForLeader(t, a.RPC, "dc1")
+	req, _ := http.NewRequest("GET", "/v1/agent/host", nil)
+	resp := httptest.NewRecorder()
+	respRaw, err := a.srv.AgentHost(resp, req)
+	assert.Nil(err)
+	assert.Equal(200, resp.Code)
+	assert.NotNil(respRaw)
+
+	obj := respRaw.(*debug.HostInfo)
+	assert.NotNil(obj.CollectionTime)
+	assert.Empty(obj.Errors)
 }
