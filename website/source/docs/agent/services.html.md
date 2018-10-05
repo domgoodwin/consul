@@ -45,7 +45,7 @@ example shows all possible fields, but note that only a few are required.
       }
     ],
     "kind": "connect-proxy",
-    "proxy_destination": "redis",
+    "proxy_destination": "redis", // Deprecated
     "proxy": {
       "destination_service_name": "redis",
       "destination_service_id": "redis1",
@@ -56,7 +56,8 @@ example shows all possible fields, but note that only a few are required.
     }
     "connect": {
       "native": false,
-      "proxy": {
+      "sidecar_service": {}
+      "proxy": {  // Deprecated
         "command": [],
         "config": {}
       }
@@ -146,39 +147,43 @@ For Consul 0.9.3 and earlier you need to use `enableTagOverride`. Consul 1.0
 supports both `enable_tag_override` and `enableTagOverride` but the latter is
 deprecated and has been removed as of Consul 1.1.
 
-The `kind` field is used to optionally identify the service as an [unmanaged
-Connect proxy](/docs/connect/proxies.html#unmanaged-proxies) instance with the
-value `connect-proxy`. For typical non-proxy instances the `kind` field must be
-omitted. The `proxy` field is also required for unmanaged proxy registrations
-and is only valid if `kind` is `connect-proxy`. The only required `proxy` field
-is `destination_service_name`. From version 1.2.0 to 1.3.0 this was specified
-using `proxy_destination` which still works but is now deprecated. See the
-[unmanaged proxy
-configuration](/docs/connect/proxies.html#complete-configuration-example)
-documentation for full details.
+The `kind` field is used to optionally identify the service as a [Connect
+proxy](/docs/connect/proxies.html) instance with the value `connect-proxy`. For
+typical non-proxy instances the `kind` field must be omitted. The `proxy` field
+is also required for Connect proxy registrations and is only valid if `kind` is
+`connect-proxy`. The only required `proxy` field is `destination_service_name`.
+For more detail please see [complete proxy configuration
+example](/docs/connect/proxies.html#complete-configuration-example)
+
+-> **Deprecation Notice:** From version 1.2.0 to 1.3.0, proxy destination was
+specified using `proxy_destination` at the top level. This will continue to work
+until at least 1.5.0 but it's highly recommended to switch to using
+`proxy.destination_service_name`.
 
 The `connect` field can be specified to configure
 [Connect](/docs/connect/index.html) for a service. This field is available in
-Consul 1.2 and later. The `native` value can be set to true to advertise the
-service as [Connect-native](/docs/connect/native.html). If the `proxy` field is
-set (even to an empty object), then this will enable a [managed
-proxy](/docs/connect/proxies.html) for the service. The fields within `proxy`
-are used to configure the proxy and are specified in the [proxy
-docs](/docs/connect/proxies.html). If `native` is true, it is an error to also
-specifiy a managed proxy instance.
+Consul 1.2.0 and later. The `native` value can be set to true to advertise the
+service as [Connect-native](/docs/connect/native.html). The `sidecar_service`
+field is an optional nested service definition its behavior and defaults are
+described in [Sidecar Service
+Registration](/docs/connect/proxies/sidecar-service.html). If `native` is true,
+it is an error to also specify a sidecar service registration.
+
+-> **Deprecation Notice:** From version 1.2.0 to 1.3.0 during beta, Connect
+supported "Managed" proxies which are specified with the `connect.proxy` field.
+[Managed Proxies are deprecated](/docs/connect/proxies/managed-deprecated.html)
+and the `connect.proxy` field will be removed in a future major release.
 
 The `weights` field is an optional field to specify the weight of a service in
 DNS SRV responses. If this field is not specified, its default value is:
-`"weights": {"passing": 1, "warning": 1}`.
-When a service is `critical`, it is excluded from DNS responses.
-Services with warning checks are in included in responses by default,
-but excluded if the optional param `only_passing = true` is present in
-agent DNS configuration or `?passing` is used via the API.
-When DNS SRV requests are made, the response will include the weights
-specified given the state of the service.
-This allows some instances to be given higher weight if they have more capacity,
-and optionally allows reducing load on services with checks in `warning` status
-by giving passing instances a higher weight.
+`"weights": {"passing": 1, "warning": 1}`. When a service is `critical`, it is
+excluded from DNS responses. Services with warning checks are included in
+responses by default, but excluded if the optional param `only_passing = true`
+is present in agent DNS configuration or `?passing` is used via the API. When
+DNS SRV requests are made, the response will include the weights specified given
+the state of the service. This allows some instances to be given higher weight
+if they have more capacity, and optionally allows reducing load on services with
+checks in `warning` status by giving passing instances a higher weight.
 
 ## Multiple Service Definitions
 
