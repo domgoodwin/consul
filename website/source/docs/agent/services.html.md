@@ -135,7 +135,7 @@ from `1`.
 
 -> **Note:** There is more information about [checks here](/docs/agent/checks.html).
 
-### Enable Tag Override
+### Enable Tag Override and Anti-Entropy
 
 Services may also contain a `token` field to provide an ACL token. This token is
 used for any interaction with the catalog for the service, including

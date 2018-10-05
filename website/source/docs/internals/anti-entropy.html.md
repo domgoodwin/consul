@@ -149,4 +149,4 @@ primary or a secondary. Using the Consul service configuration item
 [enable_tag_override](/docs/agent/services.html) you can instruct the
 Consul agent on which the Redis database is running to NOT update the
 tags during anti-entropy synchronization. For more information see
-[Services](/docs/agent/services.html#enable-tag-override) page.
+[Services](/docs/agent/services.html#enable-tag-override-and-anti-entropy) page.
